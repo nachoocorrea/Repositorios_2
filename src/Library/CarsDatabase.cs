@@ -17,6 +17,8 @@ namespace Ucu.Poo.Repositories
     public class CarsDatabase
     {
         private List<Car> cars = new List<Car>();
+        private CarJsonConverter jsonConverter = new CarJsonConverter();
+        private FileManager fileManager = new FileManager();
 
         /// <summary>
         /// Obtiene la lista de autos en la base de datos.
@@ -78,7 +80,7 @@ namespace Ucu.Poo.Repositories
         /// JSON.</returns>
         public string ConvertToJson()
         {
-            return JsonSerializer.Serialize(this.cars);
+            return this.jsonConverter.ConvertToJson(this.cars);
         }
 
         /// <summary>
@@ -89,15 +91,7 @@ namespace Ucu.Poo.Repositories
         /// cual cargar la base de datos.</param>
         public void LoadFromJson(string content)
         {
-                List<Car> items = JsonSerializer.Deserialize<List<Car>>(content);
-                if (items != null)
-                {
-                    this.cars = items;
-                }
-                else
-                {
-                    this.cars = new List<Car>();
-                }
+            this.cars = this.jsonConverter.ConvertFromJson(content);
         }
 
         /// <summary>
@@ -108,7 +102,7 @@ namespace Ucu.Poo.Repositories
         public void SaveToFile(string filePath)
         {
             string content = this.ConvertToJson();
-            File.WriteAllText(filePath, content);
+            this.fileManager.WriteAllText(filePath, content);
         }
 
         /// <summary>
@@ -120,9 +114,9 @@ namespace Ucu.Poo.Repositories
         /// <c>false</c> en caso contrario.</returns>
         public bool LoadFromFile(string filePath)
         {
-            if (File.Exists(filePath))
+            if (this.fileManager.Exists(filePath))
             {
-                string content = File.ReadAllText(filePath);
+                string content = this.fileManager.ReadAllText(filePath);
                 this.LoadFromJson(content);
                 return true;
             }

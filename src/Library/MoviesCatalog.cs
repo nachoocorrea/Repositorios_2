@@ -6,17 +6,20 @@
 
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Text.Json;
 
 namespace Ucu.Poo.Repositories
 {
     /// <summary>
-    /// Esta clase representa un catálogo de películas.
+    /// Esta clase representa un catálogo de películas. Se encarga
+    /// únicamente de mantener la colección de películas en memoria; delega
+    /// en <see cref="MovieJsonConverter"/> la conversión a/desde JSON, y en
+    /// <see cref="FileManager"/> la lectura y escritura de archivos.
     /// </summary>
     public class MoviesCatalog
     {
         private List<Movie> movies = new List<Movie>();
+        private MovieJsonConverter jsonConverter = new MovieJsonConverter();
+        private FileManager fileManager = new FileManager();
 
         /// <summary>
         /// Obtiene la lista de películas en el catálogo.
@@ -52,9 +55,9 @@ namespace Ucu.Poo.Repositories
         /// específico.
         /// </summary>
         /// <param name="field">El nombre del atributo por el cual
-        /// busMovie.</param>
+        /// buscar.</param>
         /// <param name="value">El valor del atributo por el cual
-        /// busMovie.</param>
+        /// buscar.</param>
         /// <returns>La película encontrada que cumple el criterio especificado
         /// o null si no se encuentra ninguna.</returns>
         public Movie Find(string field, string value)
@@ -71,14 +74,13 @@ namespace Ucu.Poo.Repositories
         }
 
         /// <summary>
-        /// Convierte la catálogo de películas a una representación en formato
+        /// Convierte el catálogo de películas a una representación en formato
         /// JSON.
         /// </summary>
-        /// <returns>Una representación de la base de datos en formato
-        /// JSON.</returns>
+        /// <returns>Una representación del catálogo en formato JSON.</returns>
         public string ConvertToJson()
         {
-            return JsonSerializer.Serialize(this.movies);
+            return this.jsonConverter.ConvertToJson(this.movies);
         }
 
         /// <summary>
@@ -89,15 +91,7 @@ namespace Ucu.Poo.Repositories
         /// cual cargar el catálogo.</param>
         public void LoadFromJson(string content)
         {
-                List<Movie> items = JsonSerializer.Deserialize<List<Movie>>(content);
-                if (items != null)
-                {
-                    this.movies = items;
-                }
-                else
-                {
-                    this.movies = new List<Movie>();
-                }
+            this.movies = this.jsonConverter.ConvertFromJson(content);
         }
 
         /// <summary>
@@ -108,11 +102,11 @@ namespace Ucu.Poo.Repositories
         public void SaveToFile(string filePath)
         {
             string content = this.ConvertToJson();
-            File.WriteAllText(filePath, content);
+            this.fileManager.WriteAllText(filePath, content);
         }
 
         /// <summary>
-        /// Carga la catálogo de películas desde un archivo en formato JSON.
+        /// Carga el catálogo de películas desde un archivo en formato JSON.
         /// </summary>
         /// <param name="filePath">El nombre del archivo, incluyendo
         /// opcionalmente la ruta.</param>
@@ -120,9 +114,9 @@ namespace Ucu.Poo.Repositories
         /// en caso contrario.</returns>
         public bool LoadFromFile(string filePath)
         {
-            if (File.Exists(filePath))
+            if (this.fileManager.Exists(filePath))
             {
-                string content = File.ReadAllText(filePath);
+                string content = this.fileManager.ReadAllText(filePath);
                 this.LoadFromJson(content);
                 return true;
             }
