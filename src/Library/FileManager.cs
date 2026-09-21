@@ -3,6 +3,9 @@
 //     Copyright (c) Programación II. Derechos reservados.
 // </copyright>
 //------------------------------------------------------------------------------
+
+using System.IO;
+
 namespace Ucu.Poo.Repositories
 {
     /// <summary>
